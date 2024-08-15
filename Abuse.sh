@@ -30,14 +30,22 @@ function block_ips {
     IP_LIST=$(curl -s 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/ips.txt')
 
     if [ $? -ne 0 ]; then
-        echo "Failed to fetch the IP-Ranges list. Please contact @PV_THIS_IS_AMIR"
+        echo "Failed to fetch the IP-Ranges list. Please check the URL."
+        exit 1
+    fi
+
+    if [ -z "$IP_LIST" ]; then
+        echo "The IP list is empty. No IPs were fetched."
         exit 1
     fi
 
     # اضافه کردن هر IP به chain abuse-defender
-    for IP in $IP_LIST; do
-        iptables -A abuse-defender -d $IP -j DROP
-    done
+    while IFS= read -r IP; do
+        # حذف خطوط خالی و خطوط نادرست
+        if [[ ! -z "$IP" && ! "$IP" =~ ^\s*# && ! "$IP" =~ : ]]; then
+            iptables -A abuse-defender -d $IP -j DROP
+        fi
+    done <<< "$IP_LIST"
 
     # ذخیره قوانین در /etc/iptables/rules.v4
     iptables-save > /etc/iptables/rules.v4
