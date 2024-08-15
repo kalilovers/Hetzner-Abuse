@@ -27,7 +27,7 @@ function block_ips {
     iptables -F abuse-defender
 
     # دریافت لیست IPها
-    IP_LIST=$(curl -s 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/ips.txt')
+    IP_LIST=$(curl -s 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/ips.ipv4')
 
     if [ $? -ne 0 ]; then
         echo "Failed to fetch the IP-Ranges list. Please check the URL."
