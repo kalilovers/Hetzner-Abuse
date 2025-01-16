@@ -43,7 +43,7 @@ function block_ips {
     while IFS= read -r IP; do
         # حذف خطوط خالی و خطوط نادرست
         if [[ ! -z "$IP" && ! "$IP" =~ ^\s*# && ! "$IP" =~ : ]]; then
-            iptables -A abuse-defender -d $IP -j DROP
+            iptables -A abuse-defender -د $IP -j DROP
         fi
     done <<< "$IP_LIST"
 
@@ -53,5 +53,38 @@ function block_ips {
     echo "IP-Ranges have been blocked successfully."
 }
 
-# اجرای تابع
-block_ips
+function setup_update {
+    cat <<EOF >/root/Update.sh
+#!/bin/bash
+iptables -F abuse-defender
+IP_LIST=\$(curl -s 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/ips.txt')
+for IP in \$IP_LIST; do
+    iptables -A abuse-defender -د \$IP -j DROP
+done
+iptables-save > /etc/iptables/rules.v4
+EOF
+    chmod +x /root/Update.sh
+    
+    crontab -l 2>/dev/null | grep -v "/root/Update.sh" | crontab -
+    (crontab -l 2>/dev/null; echo "0 */6 * * * /root/Update.sh") | crontab -
+    echo "Auto-update cron job has been set up to run every 6 hours."
+}
+
+function show_menu {
+    clear
+    echo "1. Block IPs now"
+    echo "2. Setup update"
+    echo "3. Exit"
+    echo -n "Please select an option: "
+    read choice
+
+    case $choice in
+        1) block_ips;;
+        2) setup_update;;
+        3) exit 0;;
+        *) echo "Invalid option, please try again"; sleep 2; show_menu;;
+    esac
+}
+
+# نمایش منو
+show_menu
