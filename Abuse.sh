@@ -59,7 +59,7 @@ block_ips() {
     if [ -z "$ip_list" ]; then
         log "Error: Empty IP list received"
         return 1
-    }
+    fi
     
     # Process IP list
     while IFS= read -r ip; do
