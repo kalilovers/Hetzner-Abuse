@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# نصب پکیج needrestart
+sudo apt-get install -y needrestart
+
+# تنظیمات مربوط به needrestart و unattended-upgrades
+sudo sed -i 's/^#\$nrconf{restart} =.*/$nrconf{restart} = '\''a'\'';/' /etc/needrestart/needrestart.conf
+echo 'DPkg::Options { "--force-confdef"; "--force-confold"; }' | sudo tee /etc/apt/apt.conf.d/99mydebconf > /dev/null
+sudo sed -i 's/^\/\/Unattended-Upgrade::Automatic-Reboot/Unattended-Upgrade::Automatic-Reboot/' /etc/apt/apt.conf.d/50unattended-upgrades
+
 function block_ips {
     clear
     # بررسی نصب بودن iptables
@@ -43,7 +51,7 @@ function block_ips {
     while IFS= read -r IP; do
         # حذف خطوط خالی و خطوط نادرست
         if [[ ! -z "$IP" && ! "$IP" =~ ^\s*# && ! "$IP" =~ : ]]; then
-            iptables -A abuse-defender -د $IP -j DROP
+            iptables -A abuse-defender -d $IP -j DROP
         fi
     done <<< "$IP_LIST"
 
@@ -59,7 +67,7 @@ function setup_update {
 iptables -F abuse-defender
 IP_LIST=\$(curl -s 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/ips.txt')
 for IP in \$IP_LIST; do
-    iptables -A abuse-defender -د \$IP -j DROP
+    iptables -A abuse-defender -d \$IP -j DROP
 done
 iptables-save > /etc/iptables/rules.v4
 EOF
@@ -78,7 +86,7 @@ function show_menu {
     echo -n "Please select an option: "
     read choice
 
-    case $choice in
+    case \$choice in
         1) block_ips;;
         2) setup_update;;
         3) exit 0;;
