@@ -122,6 +122,20 @@ block_ip_ranges() {
         log "INFO" "Added iptables rule for blocked ranges (AS_Blocker)."
     fi
 
+    # Ensure /etc/iptables directory exists
+    if [ ! -d /etc/iptables ]; then
+        log "INFO" "/etc/iptables directory does not exist. Creating it now..."
+        mkdir -p /etc/iptables
+        chmod 755 /etc/iptables
+    fi
+
+    # Ensure rules.v4 file exists
+    if [ ! -f /etc/iptables/rules.v4 ]; then
+        log "INFO" "/etc/iptables/rules.v4 does not exist. Creating it now..."
+        touch /etc/iptables/rules.v4
+        chmod 644 /etc/iptables/rules.v4
+    fi
+
     # Save rules
     ipset save > /etc/ipset.conf
     iptables-save > /etc/iptables/rules.v4
@@ -154,6 +168,16 @@ if [ -n "$IP_LIST" ]; then
         fi
     done <<< "$IP_LIST"
     ipset save > /etc/ipset.conf
+    # Ensure /etc/iptables directory exists
+    if [ ! -d /etc/iptables ]; then
+        mkdir -p /etc/iptables
+        chmod 755 /etc/iptables
+    fi
+    # Ensure rules.v4 file exists
+    if [ ! -f /etc/iptables/rules.v4 ]; then
+        touch /etc/iptables/rules.v4
+        chmod 644 /etc/iptables/rules.v4
+    fi
     iptables-save > /etc/iptables/rules.v4
 fi
 EOF
