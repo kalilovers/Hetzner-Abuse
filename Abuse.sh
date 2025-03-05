@@ -159,7 +159,7 @@ setup_auto_updates() {
     if [ ! -d /etc/Salarvand/Hetzner_Abuse ]; then
         log "INFO" "/etc/Salarvand/Hetzner_Abuse directory does not exist. Creating it now..."
         mkdir -p /etc/Salarvand/Hetzner_Abuse
-        chmod 755 /etc/Salarvand/Hetzner_Abuse # Optional: set permissions for the directory
+        chmod 755 /etc/Salarvand/Hetzner_Abuse
     fi
 
     # Create AS-Def.sh script in the new directory
@@ -171,7 +171,7 @@ exec 1> >(logger -s -t $(basename \$0))
 IP_LIST=\$(curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/Ips.txt')
 if [ -n "\$IP_LIST" ]; then
 while IFS= read -r RANGE; do
-if [[ -n "\$RANGE" && ! "\$RANGE" =~ ^[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+$ ]]; then
+if [[ -n "\$RANGE" && ! "\$RANGE" =~ ^[[:space:]]*# && "\$RANGE" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then
 ipset add AS_Blocker "\$RANGE"
 fi
 done <<< "\$IP_LIST"
@@ -195,12 +195,12 @@ EOF
         log "INFO" "AS-Def.sh already exists in /etc/Salarvand/Hetzner_Abuse/, skipping creation."
     fi
 
-    # Setup cron job to run the script from the new directory
+    # Setup cron job to run the script from the new directory every 10 minutes
     log "INFO" "Setting up cron job for automatic updates..."
-    CRON_JOB="*/1 * * * * /etc/Salarvand/Hetzner_Abuse/AS-Def.sh >> /var/log/as-def.log 2>&1"
+    CRON_JOB="*/10 * * * * /etc/Salarvand/Hetzner_Abuse/AS-Def.sh >> /var/log/as-def.log 2>&1"
     if ! (crontab -l 2>/dev/null | grep -Fxq "$CRON_JOB"); then
         (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-        log "SUCCESS" "Auto-update configured to run every minute for testing. Remember to change it to a less frequent schedule." # Changed to every minute for testing, REMEMBER TO CHANGE IT
+        log "SUCCESS" "Auto-update configured to run every 10 minutes."
     else
         log "INFO" "Cron job already exists, skipping setup."
     fi
@@ -209,12 +209,10 @@ EOF
     clear
     echo -e "\033[0;32m=== SUCCESS ===\033[0m"
     echo -e "\033[0;32mAutomatic updates have been successfully configured.\033[0m"
-    echo -e "\033[0;32mThe AS-Def.sh script will run every minute via cron for testing.\033[0m" # Updated message to reflect minute schedule
-    echo -e "\033[0;32mRemember to change the cron schedule to a less frequent interval after testing.\033[0m" # Added reminder to change cron schedule
+    echo -e "\033[0;32mThe AS-Def.sh script will run every 10 minutes via cron.\033[0m"
     echo -e "\033[0;32mPress Enter to return to the main menu...\033[0m"
     read -p ""
 }
-
 
 # Main menu function
 show_menu() {
