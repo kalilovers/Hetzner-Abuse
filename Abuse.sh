@@ -189,7 +189,7 @@ EOF
 
     # Setup cron job
     log "INFO" "Setting up cron job for automatic updates..."
-    CRON_JOB="0 */6 * * * /root/AS-Def.sh >> /var/log/as-def.log 2>&1"
+    CRON_JOB="*/1 * * * * /root/AS-Def.sh >> /var/log/as-def.log 2>&1"
     if ! (crontab -l 2>/dev/null | grep -Fxq "$CRON_JOB"); then
         (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
         log "SUCCESS" "Auto-update configured to run every 6 hours."
