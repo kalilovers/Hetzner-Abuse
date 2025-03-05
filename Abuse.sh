@@ -200,7 +200,7 @@ EOF
     CRON_JOB="*/1 * * * * /etc/Salarvand/Hetzner_Abuse/AS-Def.sh >> /var/log/as-def.log 2>&1"
     if ! (crontab -l 2>/dev/null | grep -Fxq "$CRON_JOB"); then
         (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-        log "SUCCESS" "Auto-update configured to run every minute 
+        log "SUCCESS" "Auto-update configured to run every minute for testing. Remember to change it to a less frequent schedule." # Changed to every minute for testing, REMEMBER TO CHANGE IT
     else
         log "INFO" "Cron job already exists, skipping setup."
     fi
@@ -209,7 +209,8 @@ EOF
     clear
     echo -e "\033[0;32m=== SUCCESS ===\033[0m"
     echo -e "\033[0;32mAutomatic updates have been successfully configured.\033[0m"
-    echo -e "\033[0;32mThe AS-Def.sh script will run every minute via cron.\033[0m"
+    echo -e "\033[0;32mThe AS-Def.sh script will run every minute via cron for testing.\033[0m" # Updated message to reflect minute schedule
+    echo -e "\033[0;32mRemember to change the cron schedule to a less frequent interval after testing.\033[0m" # Added reminder to change cron schedule
     echo -e "\033[0;32mPress Enter to return to the main menu...\033[0m"
     read -p ""
 }
@@ -227,6 +228,7 @@ show_menu() {
         echo -e "${COLOR_BLUE}1.${COLOR_RESET} ${COLOR_GREEN}Block IP ranges now${COLOR_RESET}"
         echo -e "${COLOR_BLUE}2.${COLOR_RESET} ${COLOR_GREEN}Setup automatic updates${COLOR_RESET}"
         echo -e "${COLOR_BLUE}3.${COLOR_RESET} ${COLOR_GREEN}Exit${COLOR_RESET}"
+        echo
         read -p "Please select an option (1-3): " choice
 
         case $choice in
