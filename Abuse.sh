@@ -227,7 +227,6 @@ show_menu() {
         echo -e "${COLOR_BLUE}1.${COLOR_RESET} ${COLOR_GREEN}Block IP ranges now${COLOR_RESET}"
         echo -e "${COLOR_BLUE}2.${COLOR_RESET} ${COLOR_GREEN}Setup automatic updates${COLOR_RESET}"
         echo -e "${COLOR_BLUE}3.${COLOR_RESET} ${COLOR_GREEN}Exit${COLOR_RESET}"
-        echo
         read -p "Please select an option (1-3): " choice
 
         case $choice in
