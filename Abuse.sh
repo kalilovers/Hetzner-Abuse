@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Exit on error
 set -e
 
@@ -9,7 +10,7 @@ log() {
     local COLOR_GREEN='\033[0;32m'
     local COLOR_YELLOW='\033[0;33m'
     local COLOR_BLUE='\033[0;34m'
-    local TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S')
+    local TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
     local LOG_LEVEL=$1
     local MESSAGE=$2
 
@@ -89,8 +90,9 @@ install_dependencies() {
 fetch_ip_ranges() {
     log "INFO" "Fetching IP ranges from remote server..."
     if ! curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/Ips.txt' -o /tmp/Ips.txt; then
-        log "ERROR" "Failed to fetch the IP list, using backup..."
-        cp /path/to/backup/Ips.txt /tmp/Ips.txt
+        log "ERROR" "Failed to fetch the IP list from remote server."
+        log "ERROR" "Please check your internet connection and try again."
+        exit 1
     fi
 }
 
@@ -153,46 +155,52 @@ block_ip_ranges() {
 setup_auto_updates() {
     log "INFO" "Setting up automatic updates..."
 
-    # Create AS-Def.sh script
-    if [ ! -f /root/AS-Def.sh ]; then
-        cat > /root/AS-Def.sh <<'EOF'
-#!/bin/bash
-set -e
-exec 1> >(logger -s -t $(basename $0)) 2>&1
-ipset flush AS_Blocker
-IP_LIST=$(curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/Ips.txt')
-if [ -n "$IP_LIST" ]; then
-    while IFS= read -r RANGE; do
-        if [[ -n "$RANGE" && ! "$RANGE" =~ ^[[:space:]]*# && "$RANGE" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then
-            ipset add AS_Blocker "$RANGE"
-        fi
-    done <<< "$IP_LIST"
-    ipset save > /etc/ipset.conf
-    # Ensure /etc/iptables directory exists
-    if [ ! -d /etc/iptables ]; then
-        mkdir -p /etc/iptables
-        chmod 755 /etc/iptables
-    fi
-    # Ensure rules.v4 file exists
-    if [ ! -f /etc/iptables/rules.v4 ]; then
-        touch /etc/iptables/rules.v4
-        chmod 644 /etc/iptables/rules.v4
-    fi
-    iptables-save > /etc/iptables/rules.v4
-fi
-EOF
-        chmod +x /root/AS-Def.sh
-        log "SUCCESS" "Created and configured AS-Def.sh."
-    else
-        log "INFO" "AS-Def.sh already exists, skipping creation."
+    # Ensure /etc/Salarvand/Hetzner_Abuse directory exists
+    if [ ! -d /etc/Salarvand/Hetzner_Abuse ]; then
+        log "INFO" "/etc/Salarvand/Hetzner_Abuse directory does not exist. Creating it now..."
+        mkdir -p /etc/Salarvand/Hetzner_Abuse
+        chmod 755 /etc/Salarvand/Hetzner_Abuse # Optional: set permissions for the directory
     fi
 
-    # Setup cron job
+    # Create AS-Def.sh script in the new directory
+    if [ ! -f /etc/Salarvand/Hetzner_Abuse/AS-Def.sh ]; then
+        cat > /etc/Salarvand/Hetzner_Abuse/AS-Def.sh <<'EOF'
+#!/bin/bash
+set -e
+exec 1> >(logger -s -t $(basename \$0))
+IP_LIST=\$(curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/Ips.txt')
+if [ -n "\$IP_LIST" ]; then
+while IFS= read -r RANGE; do
+if [[ -n "\$RANGE" && ! "\$RANGE" =~ ^[0-9]+.[0-9]+.[0-9]+.[0-9]+/[0-9]+$ ]]; then
+ipset add AS_Blocker "\$RANGE"
+fi
+done <<< "\$IP_LIST"
+ipset save > /etc/ipset.conf
+# Ensure /etc/iptables directory exists
+if [ ! -d /etc/iptables ]; then
+mkdir -p /etc/iptables
+chmod 755 /etc/iptables
+fi
+# Ensure rules.v4 file exists
+if [ ! -f /etc/iptables/rules.v4 ]; then
+touch /etc/iptables/rules.v4
+chmod 644 /etc/iptables/rules.v4
+fi
+iptables-save > /etc/iptables/rules.v4
+fi
+EOF
+        chmod +x /etc/Salarvand/Hetzner_Abuse/AS-Def.sh
+        log "SUCCESS" "Created and configured AS-Def.sh in /etc/Salarvand/Hetzner_Abuse/."
+    else
+        log "INFO" "AS-Def.sh already exists in /etc/Salarvand/Hetzner_Abuse/, skipping creation."
+    fi
+
+    # Setup cron job to run the script from the new directory
     log "INFO" "Setting up cron job for automatic updates..."
-    CRON_JOB="*/1 * * * * /root/AS-Def.sh >> /var/log/as-def.log 2>&1"
+    CRON_JOB="*/1 * * * * /etc/Salarvand/Hetzner_Abuse/AS-Def.sh >> /var/log/as-def.log 2>&1"
     if ! (crontab -l 2>/dev/null | grep -Fxq "$CRON_JOB"); then
         (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-        log "SUCCESS" "Auto-update configured to run every 6 hours."
+        log "SUCCESS" "Auto-update configured to run every minute 
     else
         log "INFO" "Cron job already exists, skipping setup."
     fi
@@ -201,10 +209,11 @@ EOF
     clear
     echo -e "\033[0;32m=== SUCCESS ===\033[0m"
     echo -e "\033[0;32mAutomatic updates have been successfully configured.\033[0m"
-    echo -e "\033[0;32mThe AS-Def.sh script will run every 6 hours via cron.\033[0m"
+    echo -e "\033[0;32mThe AS-Def.sh script will run every minute via cron.\033[0m"
     echo -e "\033[0;32mPress Enter to return to the main menu...\033[0m"
     read -p ""
 }
+
 
 # Main menu function
 show_menu() {
