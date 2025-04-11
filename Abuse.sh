@@ -89,7 +89,7 @@ install_dependencies() {
 # Fetch IP ranges
 fetch_ip_ranges() {
     log "INFO" "Fetching IP ranges from remote server..."
-    if ! curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/Ips.txt' -o /tmp/Ips.txt; then
+    if ! curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/kalilovers/Hetzner-Abuse/main/Ips.txt' -o /tmp/Ips.txt; then
         log "ERROR" "Failed to fetch the IP list from remote server."
         log "ERROR" "Please check your internet connection and try again."
         exit 1
@@ -168,7 +168,7 @@ setup_auto_updates() {
 #!/bin/bash
 set -e
 exec 1> >(logger -s -t $(basename \$0))
-IP_LIST=\$(curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/Salarvand-Education/Hetzner-Abuse/main/Ips.txt')
+IP_LIST=\$(curl -s --retry 3 --retry-delay 5 'https://raw.githubusercontent.com/kalilovers/Hetzner-Abuse/main/Ips.txt')
 if [ -n "\$IP_LIST" ]; then
 while IFS= read -r RANGE; do
 if [[ -n "\$RANGE" && ! "\$RANGE" =~ ^[[:space:]]*# && "\$RANGE" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then
